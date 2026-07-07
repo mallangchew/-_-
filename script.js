@@ -50,6 +50,11 @@ function resize() {
 }
 
 function rebuildMask() {
+  if (Array.isArray(window.ANGEL_MASK_POINTS) && window.ANGEL_MASK_POINTS.length > 0) {
+    rebuildMaskFromEmbeddedData();
+    return;
+  }
+
   if (!sourceImage.complete || !sourceImage.naturalWidth) {
     return;
   }
@@ -62,7 +67,14 @@ function rebuildMask() {
 
   const rect = coverRect(sourceImage.naturalWidth, sourceImage.naturalHeight, width, height);
   maskCtx.drawImage(sourceImage, rect.x, rect.y, rect.width, rect.height);
-  const { data } = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+  let data;
+
+  try {
+    ({ data } = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height));
+  } catch {
+    rebuildFallbackMask();
+    return;
+  }
 
   for (let y = cellY; y < height - cellY; y += cellY) {
     for (let x = cellX; x < width - cellX; x += cellX) {
@@ -76,6 +88,47 @@ function rebuildMask() {
           x,
           y,
           brightness,
+          glyph: digitGlyphs[Math.floor(Math.random() * digitGlyphs.length)],
+          phase: random(0, Math.PI * 2),
+          size: random(cellY * 0.74, cellY * 0.98),
+          edge: random(-0.8, 0.8),
+        });
+      }
+    }
+  }
+}
+
+function rebuildMaskFromEmbeddedData() {
+  maskPoints.length = 0;
+
+  for (const [xNorm, yNorm, brightness] of window.ANGEL_MASK_POINTS) {
+    maskPoints.push({
+      x: xNorm * width,
+      y: yNorm * height,
+      brightness,
+      glyph: digitGlyphs[Math.floor(Math.random() * digitGlyphs.length)],
+      phase: random(0, Math.PI * 2),
+      size: random(cellY * 0.74, cellY * 0.98),
+      edge: random(-0.8, 0.8),
+    });
+  }
+}
+
+function rebuildFallbackMask() {
+  maskPoints.length = 0;
+
+  for (let y = height * 0.06; y < height * 0.88; y += cellY) {
+    for (let x = width * 0.05; x < width * 0.64; x += cellX) {
+      const face = Math.hypot((x - width * 0.24) / (width * 0.18), (y - height * 0.23) / (height * 0.15));
+      const torso = Math.hypot((x - width * 0.23) / (width * 0.2), (y - height * 0.55) / (height * 0.28));
+      const shoulder = Math.hypot((x - width * 0.38) / (width * 0.33), (y - height * 0.78) / (height * 0.12));
+      const shape = Math.min(face, torso, shoulder);
+
+      if (shape < 1) {
+        maskPoints.push({
+          x,
+          y,
+          brightness: Math.max(0.18, 1 - shape),
           glyph: digitGlyphs[Math.floor(Math.random() * digitGlyphs.length)],
           phase: random(0, Math.PI * 2),
           size: random(cellY * 0.74, cellY * 0.98),
