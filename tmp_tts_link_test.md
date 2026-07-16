@@ -1,0 +1,1 @@
+[Korean TTS test](https://api.streamelements.com/kappa/v2/speech?voice=Seoyeon&text=%EC%95%88%EB%85%95%ED%95%98%EC%84%B8%EC%9A%94.%20%ED%97%88%EA%B3%B5%20%EA%B0%99%EC%9D%80%20%EB%A7%88%EC%9D%8C%EC%9D%84%20%EB%A7%8C%EB%82%98%EB%B4%85%EB%8B%88%EB%8B%A4.)
